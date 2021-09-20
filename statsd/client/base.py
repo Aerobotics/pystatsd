@@ -6,21 +6,50 @@ from datetime import timedelta
 
 from .timer import Timer
 
-
-def _build_stat_name(name, tags):
-    if tags is None:
-        return name
-
-    tags = ";".join(f"{k}={v}" for k, v in tags.items())
-    stat_name = f"{name};{tags}"
-    return stat_name
-
 class StatsClientBase(object):
     """A Base class for various statsd clients."""
+
+    def __init__(self):
+        self._context = None
 
     def close(self):
         """Used to close and clean up any underlying resources."""
         raise NotImplementedError()
+    
+    def bind(self, tags):
+        """
+        Sets the context of the client. This binds the tags
+        to the client so they're present when metrics are
+        written out. Useful in reducing repeating tags in every
+        function call
+        """
+        self._context = tags 
+
+    def _build_stat_name(self, name, tags):
+        """
+        Builds a stat name in the format Graphite expects. Tags are appended
+        in the series name
+
+        ```
+        my.series.name;tag1=value1;tag2=value2
+        ```
+        
+        If tags have been binded to the client through a call to `bind`, they
+        will be included in the stat name
+        """
+        if tags is None and self._context is None:
+            return name
+        
+        if tags is None and self._context is not None:
+            tags = self._context
+        elif tags is not None and self._context is None:
+            tags = tags
+        else:
+            tags.update(self._context)
+
+        tags = ";".join(f"{k}={v}" for k, v in tags.items())
+        stat_name = f"{name};{tags}"
+        return stat_name
 
     def _send(self):
         raise NotImplementedError()
@@ -72,7 +101,7 @@ class StatsClientBase(object):
         self._after(self._prepare(stat, tags, value, rate))
 
     def _prepare(self, stat, tags, value, rate):
-        stat = _build_stat_name(stat, tags)
+        stat = self._build_stat_name(stat, tags)
 
         if rate < 1:
             if random.random() > rate:
@@ -94,6 +123,7 @@ class PipelineBase(StatsClientBase):
     def __init__(self, client):
         self._client = client
         self._prefix = client._prefix
+        self._context = None
         self._stats = deque()
 
     def _send(self):

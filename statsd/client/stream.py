@@ -6,12 +6,18 @@ from .base import StatsClientBase, PipelineBase
 
 
 class StreamPipeline(PipelineBase):
+    def __init__(self, client):
+        super(StreamPipeline, self).__init__(client)
+
     def _send(self):
         self._client._after('\n'.join(self._stats))
         self._stats.clear()
 
 
 class StreamClientBase(StatsClientBase):
+    def __init__(self):
+        super(StreamClientBase, self).__init__()
+
     def connect(self):
         raise NotImplementedError()
 
@@ -43,6 +49,8 @@ class TCPStatsClient(StreamClientBase):
     def __init__(self, host='localhost', port=8125, prefix=None,
                  timeout=None, ipv6=False):
         """Create a new client."""
+        super(TCPStatsClient, self).__init__()
+
         self._host = host
         self._port = port
         self._ipv6 = ipv6
@@ -64,6 +72,8 @@ class UnixSocketStatsClient(StreamClientBase):
 
     def __init__(self, socket_path, prefix=None, timeout=None):
         """Create a new client."""
+        super(UnixSocketStatsClient, self).__init__()
+
         self._socket_path = socket_path
         self._timeout = timeout
         self._prefix = prefix

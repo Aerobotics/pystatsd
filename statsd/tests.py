@@ -12,7 +12,6 @@ from nose.tools import eq_
 from statsd import StatsClient
 from statsd import TCPStatsClient
 from statsd import UnixSocketStatsClient
-from statsd.client.base import _build_stat_name
 
 
 ADDR = (socket.gethostbyname('localhost'), 8125)
@@ -1043,13 +1042,26 @@ def test_unix_socket_timeout(mock_socket):
 
 
 def test_building_stat_name():
+    sc = _udp_client()
+
     name = 'service.example.http.requests'
     tags = {'method': 'GET', 'status': 200}
-    stat_name = _build_stat_name(name, tags)
+    stat_name = sc._build_stat_name(name, tags)
     eq_(stat_name, 'service.example.http.requests;method=GET;status=200')
 
 
 def test_building_stat_name_no_tags():
+    sc = _udp_client()
+
     name = 'service.example.http.requests'
-    stat_name = _build_stat_name(name, None)
+    stat_name = sc._build_stat_name(name, None)
     eq_(stat_name, 'service.example.http.requests')
+
+def test_binding_tags():
+    sc = _udp_client()
+    sc.bind({"hello": "world", "aero": "botics"})
+
+    name = 'service.example.http.requests'
+    tags = {'method': 'GET', 'status': 200}
+    stat_name = sc._build_stat_name(name, tags)
+    eq_(stat_name, 'service.example.http.requests;method=GET;status=200;hello=world;aero=botics')

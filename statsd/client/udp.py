@@ -30,6 +30,8 @@ class StatsClient(StatsClientBase):
     def __init__(self, host='localhost', port=8125, prefix=None,
                  maxudpsize=512, ipv6=False):
         """Create a new client."""
+        super(StatsClient, self).__init__()
+
         fam = socket.AF_INET6 if ipv6 else socket.AF_INET
         family, _, _, _, addr = socket.getaddrinfo(
             host, port, fam, socket.SOCK_DGRAM)[0]
