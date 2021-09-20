@@ -21,9 +21,10 @@ def safe_wraps(wrapper, *args, **kwargs):
 class Timer(object):
     """A context manager/decorator for statsd.timing()."""
 
-    def __init__(self, client, stat, rate=1):
+    def __init__(self, client, stat, tags, rate=1):
         self.client = client
         self.stat = stat
+        self.tags = tags
         self.rate = rate
         self.ms = None
         self._sent = False
@@ -38,7 +39,7 @@ class Timer(object):
                 return f(*args, **kwargs)
             finally:
                 elapsed_time_ms = 1000.0 * (time_now() - start_time)
-                self.client.timing(self.stat, elapsed_time_ms, self.rate)
+                self.client.timing(self.stat, elapsed_time_ms, self.rate, self.tags)
         return _wrapped
 
     def __enter__(self):
@@ -68,4 +69,4 @@ class Timer(object):
         if self._sent:
             raise RuntimeError('Already sent data.')
         self._sent = True
-        self.client.timing(self.stat, self.ms, self.rate)
+        self.client.timing(self.stat, self.ms, self.rate, self.tags)

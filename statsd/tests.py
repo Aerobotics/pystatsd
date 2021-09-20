@@ -12,6 +12,7 @@ from nose.tools import eq_
 from statsd import StatsClient
 from statsd import TCPStatsClient
 from statsd import UnixSocketStatsClient
+from statsd.client.base import _build_stat_name
 
 
 ADDR = (socket.gethostbyname('localhost'), 8125)
@@ -436,17 +437,17 @@ def test_timing_unix_socket():
 
 def _test_prepare(cl, proto):
     tests = (
-        ('foo:1|c', ('foo', '1|c', 1)),
-        ('bar:50|ms|@0.5', ('bar', '50|ms', 0.5)),
-        ('baz:23|g', ('baz', '23|g', 1)),
+        ('foo:1|c', ('foo', None, '1|c', 1)),
+        ('bar:50|ms|@0.5', ('bar', None, '50|ms', 0.5)),
+        ('baz:23|g', ('baz', None, '23|g', 1)),
     )
 
-    def _check(o, s, v, r):
+    def _check(o, s, t, v, r):
         with mock.patch.object(random, 'random', lambda: -1):
-            eq_(o, cl._prepare(s, v, r))
+            eq_(o, cl._prepare(s, t, v, r))
 
-    for o, (s, v, r) in tests:
-        _check(o, s, v, r)
+    for o, (s, t, v, r) in tests:
+        _check(o, s, t, v, r)
 
 
 @mock.patch.object(random, 'random', lambda: -1)
@@ -1039,3 +1040,16 @@ def test_unix_socket_timeout(mock_socket):
     cl = UnixSocketStatsClient(UNIX_SOCKET, timeout=test_timeout)
     cl.incr('foo')
     cl._sock.settimeout.assert_called_once_with(test_timeout)
+
+
+def test_building_stat_name():
+    name = 'service.example.http.requests'
+    tags = {'method': 'GET', 'status': 200}
+    stat_name = _build_stat_name(name, tags)
+    eq_(stat_name, 'service.example.http.requests;method=GET;status=200')
+
+
+def test_building_stat_name_no_tags():
+    name = 'service.example.http.requests'
+    stat_name = _build_stat_name(name, None)
+    eq_(stat_name, 'service.example.http.requests')
