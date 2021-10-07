@@ -42,4 +42,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /v?\d.\d.\d-?\w*/
+              only: /^v?\d.\d.\d-?\w*/
