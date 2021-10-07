@@ -1,0 +1,45 @@
+version: 2.1
+
+write_pypirc: &write_pypirc
+  name: Write PyPiRC
+  command: |
+    cat >~/.pypirc \<<EOL
+    [distutils]
+    index-servers = aero
+
+    [aero]
+    username = ${PYPI_USERNAME}
+    password = ${PYPI_PASSWORD}
+    repository = ${PYPI_URL}
+    EOL
+
+push_package: &push_package
+  name: Push package
+  command: |
+    pip3 install build wheel twine
+    python3 -m build
+    python3 -m twine upload -r aero dist/*
+
+jobs:
+  release_package:
+    docker:
+      - image: cimg/python:3.8.9
+    
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: *write_pypirc
+      - run: *push_package
+    
+
+workflows:
+  version: 2.1
+  release:
+    jobs:
+      - release_package:
+          context: sherlock
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v?\d.\d.\d-?\w*/
