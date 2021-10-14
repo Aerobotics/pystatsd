@@ -29,7 +29,7 @@ class StatsdMiddleware:
 
         tags = {
             "service": self.service_name,
-            "path": normalize_url_path(request.path),
+            "path": normalize_url_path(request.get_full_path()),
             "method": request.method,
             "status": response.status_code,
             "environment": self.environment 

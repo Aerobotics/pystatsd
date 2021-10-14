@@ -1,3 +1,4 @@
+from urllib import parse
 from urllib.parse import urlparse
 
 
@@ -28,6 +29,12 @@ def normalize_url_path(url: str) -> str:
     """
     parsed_url = urlparse(url)
     path = parsed_url.path.split("/")
+    query = parsed_url.query
+    
     normalized_path = [p if not p.isdigit() else ":id" for p in path if p != '']
-    normalized_path = f"/{'/'.join(normalized_path)}/"
+    if query:
+        normalized_path = f"/{'/'.join(normalized_path)}?{query}"
+    else:
+        normalized_path = f"/{'/'.join(normalized_path)}/"
+
     return normalized_path
