@@ -8,7 +8,6 @@ from django.core.exceptions import MiddlewareNotUsed
 from ..defaults.django import statsd
 from ._transform import normalize_url_path
 
-logger = logging.getLogger(__name__)
 
 class StatsdMiddleware:
     def __init__(self, get_response):
@@ -36,6 +35,5 @@ class StatsdMiddleware:
             "environment": self.environment 
         }
 
-        logger.info(tags)
         statsd.timing("http.requests", response_time, tags=tags)
         return response
