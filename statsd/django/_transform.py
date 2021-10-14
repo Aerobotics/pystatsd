@@ -29,7 +29,7 @@ def normalize_url_path(url: str) -> str:
     path = parsed_url.path.split("/")
     query = parsed_url.query
     
-    normalized_path = [p if not p.isdigit() else ":id" for p in path]
+    normalized_path = [p if not p.isdigit() else "{id}" for p in path]
     normalized_path = "/".join(normalized_path)
     if query:
         normalized_path = f"{normalized_path}?{query}"
