@@ -1,0 +1,33 @@
+from urllib.parse import urlparse
+
+
+def normalize_url_path(url: str) -> str:
+    """
+    'Normalizes' a URL's path
+
+    The objective here is to remove resource specific identifiers from
+    a URL path. The reason being, in Grafana, each URL path is a separate
+    metric. However, this creates too much noise for endpoints with
+    identifiers e.g `GET /users/12345`.
+
+    Instead, we would like to 'normalize' it by removing the ID and replacing
+    it with `:id`. A path `/users/12345` will become `/users/:id`. This will
+    effectively group them all under one metric.
+
+    NB: At most, this supports two levels of nesting e.g /users/:id/books/:id
+
+    Parameters
+    ----------
+    url_path
+        The URL path to normalize
+
+    Returns
+    -------
+    str
+        The normalized url path
+    """
+    parsed_url = urlparse(url)
+    path = parsed_url.path.split("/")
+    normalized_path = [p if not p.isdigit() else ":id" for p in path if p != '']
+    normalized_path = f"/{'/'.join(normalized_path)}/"
+    return normalized_path

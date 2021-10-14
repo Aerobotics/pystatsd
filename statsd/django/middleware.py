@@ -3,7 +3,10 @@ import time
 
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
+
 from ..defaults.django import statsd
+from ._transform import normalize_url_path
+
 
 
 class StatsdMiddleware:
@@ -26,7 +29,7 @@ class StatsdMiddleware:
 
         tags = {
             "service": self.service_name,
-            "path": request.path,
+            "path": normalize_url_path(request.path),
             "method": request.method,
             "status": response.status_code,
             "environment": self.environment 

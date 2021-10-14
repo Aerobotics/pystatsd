@@ -13,6 +13,8 @@ from statsd import StatsClient
 from statsd import TCPStatsClient
 from statsd import UnixSocketStatsClient
 
+from statsd.django._transform import normalize_url_path
+
 
 ADDR = (socket.gethostbyname('localhost'), 8125)
 UNIX_SOCKET = 'tmp.socket'
@@ -1065,3 +1067,18 @@ def test_binding_tags():
     tags = {'method': 'GET', 'status': 200}
     stat_name = sc._build_stat_name(name, tags)
     eq_(stat_name, 'service.example.http.requests;method=GET;status=200;hello=world;aero=botics')
+
+def test_normalize_path_no_nesting():
+    path = "/gateway/treesurveys/"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, path)
+
+def test_normalize_path_one_nested():
+    path = "/gateway/treesurveys/12345/"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id/")
+
+def test_normalize_path_two_nested():
+    path = "/gateway/treesurveys/12345/trees/2345/"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id/trees/:id/")
