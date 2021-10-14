@@ -1,6 +1,5 @@
 import os
 import time
-import logging
 
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
