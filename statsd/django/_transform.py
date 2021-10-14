@@ -15,8 +15,6 @@ def normalize_url_path(url: str) -> str:
     it with `:id`. A path `/users/12345` will become `/users/:id`. This will
     effectively group them all under one metric.
 
-    NB: At most, this supports two levels of nesting e.g /users/:id/books/:id
-
     Parameters
     ----------
     url_path
