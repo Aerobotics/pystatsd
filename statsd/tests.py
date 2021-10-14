@@ -1069,16 +1069,31 @@ def test_binding_tags():
     eq_(stat_name, 'service.example.http.requests;method=GET;status=200;hello=world;aero=botics')
 
 def test_normalize_path_no_nesting():
-    path = "/gateway/treesurveys/"
+    path = "/gateway/treesurveys"
     normalized_path = normalize_url_path(path)
     eq_(normalized_path, path)
 
 def test_normalize_path_one_nested():
+    path = "/gateway/treesurveys/12345"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id")
+
+def test_normalize_path_two_nested():
+    path = "/gateway/treesurveys/12345/trees/2345"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id/trees/:id")
+
+def test_normalize_path_no_nesting_trailing_slash():
+    path = "/gateway/treesurveys/"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, path)
+
+def test_normalize_path_one_nested_trailing_slash():
     path = "/gateway/treesurveys/12345/"
     normalized_path = normalize_url_path(path)
     eq_(normalized_path, "/gateway/treesurveys/:id/")
 
-def test_normalize_path_two_nested():
+def test_normalize_path_two_nested_trailing_slash():
     path = "/gateway/treesurveys/12345/trees/2345/"
     normalized_path = normalize_url_path(path)
     eq_(normalized_path, "/gateway/treesurveys/:id/trees/:id/")
@@ -1097,3 +1112,18 @@ def test_normalize_path_two_nested_with_query_params():
     path = "/gateway/treesurveys/12345/trees/2345?with_trees=false"
     normalized_path = normalize_url_path(path)
     eq_(normalized_path, "/gateway/treesurveys/:id/trees/:id?with_trees=false")
+
+def test_normalize_path_no_nesting_with_query_params_trailing_slash():
+    path = "/gateway/treesurveys/?with_trees=false"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, path)
+
+def test_normalize_path_one_nested_with_query_params_trailing_slash():
+    path = "/gateway/treesurveys/12345/?with_trees=false"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id/?with_trees=false")
+
+def test_normalize_path_two_nested_with_query_params_trailing_slash():
+    path = "/gateway/treesurveys/12345/trees/2345/?with_trees=false"
+    normalized_path = normalize_url_path(path)
+    eq_(normalized_path, "/gateway/treesurveys/:id/trees/:id/?with_trees=false")
