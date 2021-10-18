@@ -11,14 +11,12 @@ from ._transform import normalize_url_path
 class StatsdMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        # If the settings are not set in Django settings, just
-        # disable the middleware
+        # If the service name is not set, disable the middleware
         # TODO: Issue a warning via a logger
-        try:
-            self.service_name = settings.SERVICE_NAME
-            self.environment = os.getenv("ENVIRONMENT_NAME", "dev")
-        except:
+        self.service_name = os.getenv("SERVICE_NAME")
+        if self.service_name is None:
             raise MiddlewareNotUsed
+        self.environment = os.getenv("ENVIRONMENT_NAME", "dev")
 
 
     def __call__(self, request):
