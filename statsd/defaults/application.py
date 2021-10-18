@@ -19,6 +19,7 @@ if statsd is None:
 
     environment = os.getenv("ENVIRONMENT_NAME", "dev")
     application = os.getenv("APPLICATION_NAME")
+    namespace = os.getenv("APPLICATION_NAMESPACE")
 
     tags = {"environment": environment}
 
@@ -31,4 +32,13 @@ if statsd is None:
             "to query for these metrics."
         )
 
-    statsd.bind(tags={"environment": environment})
+    if namespace is not None:
+        tags["namespace"] = namespace
+    else:
+        warnings.warn(
+            "Application namespace not set. Could not find environment "
+            "variable APPLICATION_NAMESPACE. This will make it difficult "
+            "to query for these metrics."
+        )
+
+    statsd.bind(tags=tags)
