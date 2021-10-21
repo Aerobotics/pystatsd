@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from .timer import Timer
 
+
 class StatsClientBase(object):
     """A Base class for various statsd clients."""
 
@@ -15,7 +16,7 @@ class StatsClientBase(object):
     def close(self):
         """Used to close and clean up any underlying resources."""
         raise NotImplementedError()
-    
+
     def bind(self, tags):
         """
         Sets the context of the client. This binds the tags
@@ -23,7 +24,7 @@ class StatsClientBase(object):
         written out. Useful in reducing repeating tags in every
         function call
         """
-        self._context = tags 
+        self._context = tags
 
     def _build_stat_name(self, name, tags):
         """
@@ -34,12 +35,12 @@ class StatsClientBase(object):
         my.series.name;tag1=value1;tag2=value2
         ```
         
-        If tags have been binded to the client through a call to `bind`, they
+        If tags have been bound to the client through a call to `bind`, they
         will be included in the stat name
         """
         if tags is None and self._context is None:
             return name
-        
+
         if tags is None and self._context is not None:
             tags = self._context
         elif tags is not None and self._context is None:

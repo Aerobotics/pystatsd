@@ -1,9 +1,8 @@
 from __future__ import absolute_import
 import os
-from django.conf import settings
 
-from statsd import defaults
-from statsd.client import StatsClient
+from aerostatsd import defaults
+from aerostatsd.client import StatsClient
 
 
 STATSD_PREFIX = "aerobotics.service"

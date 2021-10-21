@@ -1,4 +1,3 @@
-from urllib import parse
 from urllib.parse import urlparse
 
 
@@ -17,7 +16,7 @@ def normalize_url_path(url: str) -> str:
 
     Parameters
     ----------
-    url_path
+    url
         The URL path to normalize
 
     Returns

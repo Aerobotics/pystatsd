@@ -9,11 +9,11 @@ from unittest import SkipTest
 import mock
 from nose.tools import eq_
 
-from statsd import StatsClient
-from statsd import TCPStatsClient
-from statsd import UnixSocketStatsClient
+from aerostatsd import StatsClient
+from aerostatsd import TCPStatsClient
+from aerostatsd import UnixSocketStatsClient
 
-from statsd.django._transform import normalize_url_path
+from aerostatsd.django._transform import normalize_url_path
 
 
 ADDR = (socket.gethostbyname('localhost'), 8125)

@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import os
 
-from statsd import defaults
-from statsd.client import StatsClient
+from aerostatsd import defaults
+from aerostatsd.client import StatsClient
 
 
 statsd = None

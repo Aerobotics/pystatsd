@@ -1,7 +1,6 @@
 import os
 import time
 
-from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
 
 from ..defaults.django import statsd
@@ -18,9 +17,8 @@ class StatsdMiddleware:
             raise MiddlewareNotUsed
         self.environment = os.getenv("ENVIRONMENT_NAME", "dev")
 
-
     def __call__(self, request):
-        start = time.time() 
+        start = time.time()
         response = self.get_response(request)
         response_time = int((time.time() - start) * 1000)
 
@@ -29,7 +27,7 @@ class StatsdMiddleware:
             "path": normalize_url_path(request.get_full_path()),
             "method": request.method,
             "status": response.status_code,
-            "environment": self.environment 
+            "environment": self.environment
         }
 
         statsd.timing("http.requests", response_time, tags=tags)

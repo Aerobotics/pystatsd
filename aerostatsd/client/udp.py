@@ -25,7 +25,7 @@ class Pipeline(PipelineBase):
 
 
 class StatsClient(StatsClientBase):
-    """A client for statsd."""
+    """A client for aerostatsd."""
 
     def __init__(self, host='localhost', port=8125, prefix=None,
                  maxudpsize=512, ipv6=False):
