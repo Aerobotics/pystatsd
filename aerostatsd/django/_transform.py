@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from uuid import UUID
 
 
 def normalize_url_path(url: str) -> str:
@@ -27,10 +28,47 @@ def normalize_url_path(url: str) -> str:
     parsed_url = urlparse(url)
     path = parsed_url.path.split("/")
     query = parsed_url.query
-    
-    normalized_path = [p if not p.isdigit() else "{id}" for p in path]
-    normalized_path = "/".join(normalized_path)
+
+    normalized_path_parts = []
+    for p in path:
+        if p.isdigit():
+            normalized_path_parts.append("{id}")
+        elif is_uuid(p):
+            normalized_path_parts.append("{uuid}")
+        else:
+            normalized_path_parts.append(p)
+
+    normalized_path = "/".join(normalized_path_parts)
     if query:
         normalized_path = f"{normalized_path}?{query}"
 
     return normalized_path
+
+
+def is_uuid(uuid_to_test: str, version=4):
+    """
+    Check if uuid_to_test is a valid UUID.
+
+     Parameters
+    ----------
+    uuid_to_test : str
+    version : {1, 2, 3, 4}
+
+     Returns
+    -------
+    `True` if uuid_to_test is a valid UUID, otherwise `False`.
+
+     Examples
+    --------
+    >>> is_valid_uuid('c9bf9e57-1685-4c89-bafb-ff5af830be8a')
+    True
+    >>> is_valid_uuid('c9bf9e58')
+    False
+    """
+
+    try:
+        uuid_obj = UUID(uuid_to_test, version=version)
+    except ValueError:
+        return False
+
+    return str(uuid_obj) == uuid_to_test
