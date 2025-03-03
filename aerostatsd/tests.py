@@ -1147,3 +1147,8 @@ def test_normalize_path_two_nested_uuid_with_query_params():
     path = "/gateway/treesurveys/5e88b90c-c343-48cf-a140-35a3d5187dd7/trees/e82b6eb7-4832-4b06-900a-0e5d140e8031/?with_trees=false"
     normalized_path = normalize_url_path(path)
     eq_(normalized_path, "/gateway/treesurveys/{uuid}/trees/{uuid}/?with_trees=false")
+
+def test_normalize_path_ignore_query_params():
+    path = "/gateway/treesurveys/12345/?with_trees=false"
+    normalized_path = normalize_url_path(path, include_query_params=False)
+    eq_(normalized_path, "/gateway/treesurveys/{id}/")

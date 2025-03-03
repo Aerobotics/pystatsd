@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 from uuid import UUID
 
 
-def normalize_url_path(url: str) -> str:
+def normalize_url_path(url: str, include_query_params: bool = True) -> str:
     """
     'Normalizes' a URL's path
 
@@ -19,6 +19,9 @@ def normalize_url_path(url: str) -> str:
     ----------
     url
         The URL path to normalize
+
+    include_query_params
+        Whether to include query parameters in the normalized path
 
     Returns
     -------
@@ -39,7 +42,7 @@ def normalize_url_path(url: str) -> str:
             normalized_path_parts.append(p)
 
     normalized_path = "/".join(normalized_path_parts)
-    if query:
+    if query and include_query_params:
         normalized_path = f"{normalized_path}?{query}"
 
     return normalized_path
