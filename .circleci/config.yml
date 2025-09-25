@@ -24,13 +24,12 @@ jobs:
   release_package:
     docker:
       - image: cimg/python:3.8.9
-    
+
     steps:
       - checkout
       - setup_remote_docker
       - run: *write_pypirc
       - run: *push_package
-    
 
 workflows:
   release:
@@ -39,6 +38,6 @@ workflows:
           context: sherlock
           filters:
             tags:
-              only: /^v?\d+.\d+.\d+-?\w*/
+              only: /^v?\d+.\d+.\d+(.post\d+)?(.dev\d+)?(.rc\d+)?(.a\d+)?(.b\d+)?/
             branches:
               ignore: /.*/
