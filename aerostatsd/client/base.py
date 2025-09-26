@@ -48,8 +48,8 @@ class StatsClientBase(object):
         else:
             tags.update(self._context)
 
-        tags = ";".join(f"{k}={v}" for k, v in tags.items())
-        stat_name = f"{name};{tags}"
+        tags = ";".join("{}={}".format(k, v) for k, v in tags.items())
+        stat_name = "{};{}".format(name, tags)
         return stat_name
 
     def _send(self):

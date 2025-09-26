@@ -43,7 +43,7 @@ def normalize_url_path(url: str, include_query_params: bool = True) -> str:
 
     normalized_path = "/".join(normalized_path_parts)
     if query and include_query_params:
-        normalized_path = f"{normalized_path}?{query}"
+        normalized_path = "{}?{}".format(normalized_path, query)
 
     return normalized_path
 
