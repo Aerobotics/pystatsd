@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import socket
-import threading
 import time
 
 from .base import StatsClientBase, PipelineBase
@@ -34,86 +33,72 @@ class StatsClient(StatsClientBase):
         """
         Create a new client.
 
-        `refresh_interval` is the number of seconds to cache the resolved
-        address before re-resolving it, so DNS changes (e.g. the statsd
-        host moving to a new IP) are eventually picked up. Set to `None`
-        to resolve once and never refresh.
+        `refresh_interval` is the number of seconds between socket
+        rebuilds, which give the client a new source port. Set to `None`
+        to keep one socket for the lifetime of the client.
         """
         super(StatsClient, self).__init__()
 
-        self._host = host
-        self._port = port
-        self._fam = socket.AF_INET6 if ipv6 else socket.AF_INET
-        self._refresh_interval = refresh_interval
+        fam = socket.AF_INET6 if ipv6 else socket.AF_INET
+        family, _, _, _, addr = socket.getaddrinfo(
+            host, port, fam, socket.SOCK_DGRAM)[0]
+        self._family = family
+        self._addr = addr
+        self._sock = socket.socket(family, socket.SOCK_DGRAM)
         self._prefix = prefix
         self._maxudpsize = maxudpsize
-        self._lock = threading.Lock()
+        self._refresh_interval = refresh_interval
+        self._last_refresh = time.monotonic()
 
-        self._connect()
+    def _refresh(self):
+        """
+        Rebuild the socket periodically, for a new source port.
 
-    def _connect(self):
-        # Record the attempt before resolving, so a failed or slow
-        # resolution still throttles retries to refresh_interval instead
-        # of being retried on every subsequent send.
-        self._last_connect = time.monotonic()
-
-        family, _, _, _, addr = socket.getaddrinfo(
-            self._host, self._port, self._fam, socket.SOCK_DGRAM)[0]
-        sock = socket.socket(family, socket.SOCK_DGRAM)
-
-        old_sock = getattr(self, '_sock', None)
-        self._addr = addr
-        self._sock = sock
-
-        if old_sock is not None:
-            old_sock.close()
-
-    def _refresh_connection(self):
+        A load balancer that maps UDP flows to backends by source and
+        destination address/port won't re-route a flow while traffic keeps
+        flowing, so a flow pinned to a backend that has gone away silently
+        black-holes. A new source port is a new flow, and gets routed
+        afresh. The destination address is resolved once, in __init__.
+        """
         if (self._refresh_interval is None
-                or time.monotonic() - self._last_connect
+                or time.monotonic() - self._last_refresh
                 < self._refresh_interval):
             return
 
-        with self._lock:
-            # Re-check now that we hold the lock, in case another
-            # thread already refreshed while we were waiting for it.
-            if (time.monotonic() - self._last_connect
-                    >= self._refresh_interval):
-                try:
-                    self._connect()
-                except socket.error:
-                    # Keep using the old socket/address if
-                    # re-resolution fails.
-                    pass
+        if self._sock is None:
+            # Closed.
+            return
+
+        # Stamp before building, so a failure throttles retries.
+        self._last_refresh = time.monotonic()
+
+        try:
+            sock = socket.socket(self._family, socket.SOCK_DGRAM)
+        except socket.error:
+            # Keep the current socket. Never raise over a metric.
+            return
+
+        old_sock = self._sock
+        self._sock = sock
+        old_sock.close()
 
     def _send(self, data):
         """Send data to statsd."""
-        self._refresh_connection()
-
-        # Snapshot both together so a concurrent _connect() can't hand us
-        # a mismatched (old socket, new address) or (new socket, old
-        # address) pair.
-        with self._lock:
-            sock = self._sock
-            addr = self._addr
-
-        if sock is None:
-            # Closed concurrently.
+        self._refresh()
+        if self._sock is None:
+            # Closed.
             return
 
         try:
-            sock.sendto(data.encode('ascii'), addr)
+            self._sock.sendto(data.encode('ascii'), self._addr)
         except (socket.error, RuntimeError):
             # No time for love, Dr. Jones!
             pass
 
     def close(self):
-        with self._lock:
-            sock = self._sock
-            self._sock = None
-
-        if sock is not None and hasattr(sock, 'close'):
-            sock.close()
+        if self._sock and hasattr(self._sock, 'close'):
+            self._sock.close()
+        self._sock = None
 
     def pipeline(self):
         return Pipeline(self)
